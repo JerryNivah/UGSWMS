@@ -1,0 +1,7 @@
+name = "sparkling-breeze-01ae"
+main = "src/index.ts"
+compatibility_date = "2026-02-05"
+compatibility_flags = ["nodejs_compat"]
+
+workers_dev = true
+preview_urls = true

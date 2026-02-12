@@ -1,0 +1,243 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return signedIn() && request.auth.token.email == "admin@ugswms.com";
+    }
+
+    // -----------------------
+    // USERS
+    // -----------------------
+    match /users/{uid} {
+
+      // Admin full control
+      allow read, create, update, delete: if isSuperAdmin();
+
+      // User can read own profile
+      allow read: if signedIn() && request.auth.uid == uid;
+
+      // User can CREATE own profile/application doc
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && (!("uid" in request.resource.data) || request.resource.data.uid == request.auth.uid)
+        && request.resource.data.keys().hasOnly([
+          "uid",
+          "email",
+          "name",
+          "phone",
+          "licenseNumber",
+          "role",
+          "status",
+          "driverStatus",
+          "activeRouteId",
+          "fcmTokens",
+          "lastLat",
+          "lastLng",
+          "createdAt",
+          "updatedAt"
+        ])
+        && request.resource.data.role in ["driver_pending", "pending_driver", "user"]
+        && (!("status" in request.resource.data) || request.resource.data.status == "pending");
+
+      // User updates runtime fields only
+      // + applicant can edit application fields only while pending
+      allow update: if signedIn()
+        && request.auth.uid == uid
+        && (
+          request.resource.data.diff(resource.data)
+            .changedKeys()
+            .hasOnly([
+              "fcmTokens",
+              "lastLat",
+              "lastLng",
+              "driverStatus",
+              "activeRouteId",
+              "updatedAt"
+            ])
+          || (
+            resource.data.role in ["driver_pending", "pending_driver"]
+            && (!("status" in resource.data) || resource.data.status == "pending")
+            && request.resource.data.diff(resource.data)
+              .changedKeys()
+              .hasOnly(["name", "phone", "licenseNumber", "updatedAt"])
+          )
+        );
+    }
+
+    // -----------------------
+    // BINS (IoT Simulated)
+    // -----------------------
+    match /bins/{binId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isSuperAdmin();
+
+      // Driver can update only assigned bins (for stop completion)
+      allow update: if signedIn()
+        && resource.data.assignedDriverUid == request.auth.uid
+        && request.resource.data.diff(resource.data).changedKeys()
+          .hasOnly([
+            "status",
+            "level",
+            "fillLevel",
+            "lastCollectedAt",
+            "lockedUntil",
+            "assignedDriverUid",
+            "assignedRouteId",
+            "updatedAt"
+          ]);
+    }
+
+    // -----------------------
+    // ROUTES (Driver Routes)
+    // -----------------------
+    match /routes/{routeId} {
+
+      // Admin reads all routes; driver reads only own route
+      allow read: if isSuperAdmin()
+        || (signedIn() && request.auth.uid == resource.data.driverUid);
+
+      // Admin creates/deletes routes
+      allow create, delete: if isSuperAdmin();
+
+      // ✅ Admin can update anything
+      // ✅ Driver can update only specific route state fields:
+      // stops (done flags), status, animationState/currentStopIndex, updatedAt
+      allow update: if isSuperAdmin()
+        || (
+          signedIn()
+          && request.auth.uid == resource.data.driverUid
+          && request.resource.data.diff(resource.data)
+            .changedKeys()
+            .hasOnly([
+              "stops",
+              "status",
+              "currentStopIndex",
+              "animationState",
+              "updatedAt",
+              "completedAt"
+            ])
+        );
+    }
+
+    // -----------------------
+    // ROUTE EVENTS (Driver -> Admin feed)
+    // -----------------------
+    match /route_events/{eventId} {
+
+      // ✅ admin reads all events
+      allow read: if isSuperAdmin();
+
+      // ✅ driver creates only their own event, only stop_completed
+      allow create: if signedIn()
+        && request.resource.data.driverUid == request.auth.uid
+        && request.resource.data.type in ["stop_completed"]
+        && request.resource.data.keys().hasOnly([
+          "type",
+          "routeId",
+          "stopIndex",
+          "binId",
+          "binTitle",
+          "driverUid",
+          "createdAt"
+        ]);
+
+      // only admin can update/delete
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // -----------------------
+    // NOTIFICATIONS
+    // -----------------------
+    match /notifications/{docId} {
+
+      allow read: if isSuperAdmin()
+        || (signedIn() && request.auth.uid == resource.data.toUid);
+
+      // only admin creates/deletes
+      allow create, delete: if isSuperAdmin();
+
+      // user marks their own as read
+      allow update: if isSuperAdmin()
+        || (
+          signedIn()
+          && request.auth.uid == resource.data.toUid
+          && request.resource.data.diff(resource.data)
+            .changedKeys().hasOnly(["read", "readAt"])
+        );
+    }
+
+    // -----------------------
+    // SUPPORT TICKETS
+    // -----------------------
+    match /support_tickets/{ticketId} {
+      allow create: if signedIn();
+
+      allow read: if signedIn()
+        && request.auth.uid == resource.data.senderUid;
+
+      allow read, update, delete: if isSuperAdmin();
+    }
+
+    // -----------------------
+    // SERVICE REQUESTS
+    // -----------------------
+    match /service_requests/{id} {
+
+      allow create: if signedIn();
+
+      allow read: if isSuperAdmin()
+        || (signedIn() && request.auth.uid == resource.data.userUid);
+
+      // user cancels own pending request (only status + updatedAt)
+      allow update: if signedIn()
+        && request.auth.uid == resource.data.userUid
+        && resource.data.status == "pending"
+        && request.resource.data.status == "cancelled"
+        && request.resource.data.diff(resource.data)
+          .changedKeys().hasOnly(["status", "updatedAt"]);
+
+      // driver updates assignmentStatus + status
+      allow update: if signedIn()
+        && request.auth.uid == resource.data.assignedDriverUid
+        && request.resource.data.diff(resource.data)
+          .changedKeys().hasOnly(["assignmentStatus", "status", "updatedAt"])
+        && request.resource.data.assignmentStatus in ["accepted", "completed"]
+        && request.resource.data.status in ["accepted", "completed"]
+        && request.resource.data.status == request.resource.data.assignmentStatus;
+
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // -----------------------
+    // ASSIGNMENTS
+    // -----------------------
+    match /assignments/{assignmentId} {
+
+      allow read: if isSuperAdmin()
+        || (signedIn() && request.auth.uid == resource.data.driverUid);
+
+      allow create, delete: if isSuperAdmin();
+
+      allow update: if isSuperAdmin()
+        || (
+          signedIn()
+          && request.auth.uid == resource.data.driverUid
+          && request.resource.data.diff(resource.data)
+            .changedKeys().hasOnly(["status", "updatedAt"])
+          && request.resource.data.status in ["accepted", "completed"]
+        );
+    }
+
+    // -----------------------
+    // SYSTEM
+    // -----------------------
+    match /system/{docId} {
+      allow read, write: if isSuperAdmin();
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "995910307024",
+    "project_id": "ugswms-9361c",
+    "storage_bucket": "ugswms-9361c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:995910307024:android:b16ac4f2ff322e3cc222d5",
+        "android_client_info": {
+          "package_name": "com.example.ugswms"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxyAtIbAeHtAH2N1Cxat-fEzP9bvhbwM4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

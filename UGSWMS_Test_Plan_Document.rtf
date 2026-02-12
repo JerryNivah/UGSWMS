@@ -1,0 +1,180 @@
+{\rtf1\ansi\deff0{\fonttbl{\f0 Times New Roman;}}\fs24
+\pard\qc\b\fs32 UASIN GISHU SMART WASTE MANAGEMENT SYSTEM TEST PLAN DOCUMENT\b0\fs24\par
+\pard\qc Project: UGSWMS (Firebase + Flutter: Web Admin, Mobile Driver, Mobile Resident)\par
+\pard\qc Document Type: Test Plan\par
+\pard\qc Prepared By: __________________________\par
+\pard\qc Registration No: _______________________\par
+\pard\qc Supervisor: ___________________________\par
+\pard\qc Institution: __________________________\par
+\pard\qc Date: _________________________________\par
+\par
+\pard\b Table of Contents\b0\par
+\pard (Generate automatically in Word)\par
+\par
+\pard\b 1.0 Introduction\b0\par
+\pard UGSWMS is a smart waste management system consisting of a Flutter Web Admin dashboard, a Flutter Mobile Driver application, and a Flutter Mobile Resident (Customer) application. The backend is powered by Firebase Authentication and Firestore, with optional external integrations such as Google Maps, Hugging Face (chatbot), and Daraja/M-Pesa (payments?currently deferred).\par
+\pard This Test Plan defines the overall testing strategy, objectives, and step-by-step procedures used to validate the system against the Software Requirements Specification (SRS) and the System Design Specification (SDS).\par
+\par
+\pard\b 1.1 Goals and Objectives\b0\par
+\pard 1. Validate secure login/logout and role-based access control for Admin, Driver, and Resident.\par
+\pard 2. Verify IoT simulation updates occur every 5?10 seconds and trigger alerts only after persistence thresholds to reduce false alerts.\par
+\pard 3. Verify real-time dashboard displays bins with correct color/state and updates smoothly.\par
+\pard 4. Validate truck allocation suggests nearest trucks and admin can assign routes.\par
+\pard 5. Validate route tracking and driver status updates and that the dashboard reflects completion.\par
+\pard 6. Validate notifications are delivered and rate-limited.\par
+\pard 7. Validate reports and analytics (excluding payments if deferred).\par
+\pard 8. Confirm UI is responsive and stable (no overflows, no crashes) and typical actions complete within ~3 seconds under normal conditions.\par
+\par
+\pard\b 1.2 Statement of Scope\b0\par
+\pard In-scope features to test (SRS Functional Requirements):\par
+\pard 1. Authentication & RBAC (Admin / Driver / Resident)\par
+\pard 2. Driver management (driver details, availability)\par
+\pard 3. IoT bin simulation (5?10 sec updates, thresholds, persistence alerts, suppression when assigned)\par
+\pard 4. Real-time admin dashboard (smooth updates, auto refresh)\par
+\pard 5. Truck allocation (suggest top 3 nearest trucks)\par
+\pard 6. Route tracking & visualization (driver sees routes; route updates dynamically)\par
+\pard 7. AI chatbot (Hugging Face integration)\par
+\pard 8. Notifications (driver tasks, admin alerts; rate limiting)\par
+\pard 9. Reports & analytics (driver performance, service efficiency, trends; export optional)\par
+\pard In-scope features from SDS Architecture/Modules:\par
+\pard 1. Flutter web admin dashboard + Flutter mobile apps\par
+\pard 2. Firestore collections (users, drivers, bins, notifications, reports, system_logs, etc.)\par
+\pard 3. External APIs (Google Maps, Hugging Face, Daraja/M-Pesa)\par
+\pard Out of scope (for this phase):\par
+\pard 1. Digital payments via Daraja/M-Pesa (deferred; stubs/UI placeholders only)\par
+\pard 2. Integration with real IoT sensors (simulation only)\par
+\par
+\pard\b 1.3 Major Constraints\b0\par
+\pard 1. IoT is simulated; accuracy depends on simulation design, not hardware sensors.\par
+\pard 2. Free-tier limits for Firebase/Google Maps may affect load/stress tests.\par
+\pard 3. Internet connectivity affects real-time dashboards and API calls.\par
+\pard 4. If payment is deferred, revenue reports are not testable.\par
+\par
+\pard\b 2.0 Test Plan\b0\par
+\par
+\pard\b 2.1 Software (SCI?s) to be Tested\b0\par
+\pard 1. UGSWMS Admin Web App (Flutter Web): bins dashboard, alerts, assignments, reports.\par
+\pard 2. UGSWMS Driver Mobile App (Flutter Android): assigned routes, status updates, task history, notifications.\par
+\pard 3. UGSWMS Resident/Customer Mobile App (Flutter Android): signup/login, request service, history, chatbot, notifications.\par
+\pard 4. Backend services: Firebase Auth, Firestore, Cloud Functions/Workers endpoints (where applicable), FCM.\par
+\pard 5. External APIs: Google Maps, Hugging Face (Daraja deferred).\par
+\pard Explicit exclusions: Payment integration tests (Daraja) ? deferred.\par
+\par
+\pard\b 2.2 Testing Strategy\b0\par
+\pard Testing will follow a staged strategy: unit tests, integration tests, validation tests, and high-order/system tests.\par
+\par
+\pard\b 2.2.1 Unit Testing\b0\par
+\pard Targets: validators, route progress calculations, bin fill simulation logic, status mapping.\par
+\pard Approach: Dart unit tests (flutter test) on pure logic functions.\par
+\pard [Image Placeholder: Unit test output / flutter test results]\par
+\par
+\pard\b 2.2.2 Integration Testing\b0\par
+\pard Targets: Auth + Firestore profile creation; real-time streams; notifications; reports queries and indexes.\par
+\pard Approach: Local dev + Firebase emulator (optional) + staging Firestore project.\par
+\par
+\pard\b 2.2.3 Validation Testing\b0\par
+\pard Run end-to-end acceptance flows aligned with SDS activity diagram.\par
+\par
+\pard\b 2.2.4 High-Order (System) Testing\b0\par
+\pard Recovery testing, security testing, stress testing, performance testing, alpha/beta testing.\par
+\par
+\pard\b 2.3 Testing Resources and Staffing\b0\par
+\pard Test Lead: __________________\par
+\pard Developer/Tester: __________________\par
+\pard Supervisor Reviewer: __________________\par
+\pard External tester (optional): __________________\par
+\pard Devices (Android phones, admin web PC, internet): __________________\par
+\par
+\pard\b 2.4 Test Work Products\b0\par
+\pard Test Plan, Test Case Checklist, Bug List, Evidence Pack, Final Test Summary Report.\par
+\par
+\pard\b 2.5 Test Record Keeping\b0\par
+\pard /test_evidence/admin/\par
+\pard /test_evidence/driver/\par
+\pard /test_evidence/resident/\par
+\pard /test_evidence/firestore/\par
+\pard Maintain TEST_LOG.md with date/time, tester, case ID, result, notes, evidence path.\par
+\par
+\pard\b 2.6 Test Metrics\b0\par
+\pard Coverage, pass rate, defect density, mean time to fix, performance metrics (dashboard latency, login time, notification reliability).\par
+\par
+\pard\b 2.7 Testing Tools and Environment\b0\par
+\pard Flutter SDK: ________\par
+\pard Firebase project: ________\par
+\pard Firestore console access: yes/no\par
+\pard Google Maps API key: yes/no\par
+\pard Hugging Face API key: yes/no\par
+\par
+\pard\b 2.8 Test Schedule\b0\par
+\pard Unit Testing: 2?3 days (____ to ____)\par
+\pard Integration Testing: 4?6 days (____ to ____)\par
+\pard Validation Testing: 2?4 days (____ to ____)\par
+\pard System Testing: 3?5 days (____ to ____)\par
+\pard Final Report: 1?2 days (____ to ____)\par
+\par
+\pard\b 3.0 Test Procedure\b0\par
+\par
+\pard\b 3.1 Software to be Tested\b0\par
+\pard Same as Section 2.1.\par
+\par
+\pard\b 3.2 Testing Procedure\b0\par
+\pard General steps: confirm environment, seed data, execute steps, capture evidence, record outcome.\par
+\par
+\pard\b 3.2.1 Unit Test Cases\b0\par
+\pard U-01: Password Validator (min 8, upper, lower, number, special, no spaces).\par
+\pard U-02: Kenyan Phone Normalizer (+2547XXXXXXXX / +2541XXXXXXXX).\par
+\pard [Image Placeholder: Unit test results]\par
+\par
+\pard\b 3.2.2 Integration Testing\b0\par
+\pard IT-01: Resident signup creates Firestore user doc.\par
+\pard IT-02: Admin assigns route -> driver receives task.\par
+\pard IT-03: Bin simulation updates every 5?10 seconds.\par
+\pard [Image Placeholder: Register screen filled]\par
+\pard [Image Placeholder: Firestore users doc]\par
+\pard [Image Placeholder: Admin assignment modal]\par
+\pard [Image Placeholder: Driver tasks list]\par
+\par
+\pard\b 3.2.3 Validation Testing\b0\par
+\pard VT-01: Admin real-time dashboard behavior.\par
+\pard VT-02: Driver route execution updates system status.\par
+\pard VT-03: Reports and analytics (excluding revenue).\par
+\pard [Image Placeholder: Map states]\par
+\pard [Image Placeholder: Alerts panel]\par
+\pard [Image Placeholder: Reports overview]\par
+\par
+\pard\b 3.2.4 High-Order (System) Tests\b0\par
+\pard Recovery testing, security testing, stress testing, performance testing, alpha/beta testing.\par
+\par
+\pard\b 3.3 Testing Resources and Staffing\b0\par
+\pard (Repeat staffing and devices list; fill in actuals.)\par
+\par
+\pard\b 3.4 Test Work Products\b0\par
+\pard Test Log, Evidence screenshots, Bug list, Final summary report.\par
+\par
+\pard\b 3.5 Test Log Template\b0\par
+\pard Test Case ID: ______\par
+\pard Date/Time: ______\par
+\pard Tester: ______\par
+\pard Build Version: ______\par
+\pard Environment: ______\par
+\pard Result: PASS / FAIL\par
+\pard Notes: ______\par
+\pard Evidence Path: ______\par
+\par
+\pard\b Appendix A: Screenshot Placeholders Checklist\b0\par
+\pard Admin login success\par
+\pard Driver login success\par
+\pard Resident signup success\par
+\pard Firestore /users/\{uid\} doc proof\par
+\pard Bin simulation timestamps\par
+\pard Alert persistence proof\par
+\pard Assignment creation + driver receives task\par
+\pard Route completion updates admin\par
+\pard Reports page metrics\par
+\pard Firestore indexes list (if created)\par
+\par
+\pard\b Appendix B: Deferred Items\b0\par
+\pard Payments (Daraja/M-Pesa) tests deferred.\par
+\pard Real IoT sensor integration deferred.\par
+\par
+}
